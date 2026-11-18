@@ -31,7 +31,8 @@ jobs:
           context: .
           platforms: linux/amd64
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
-          tags: ghcr.io/get-encatch/gatus:${{ github.ref_name }}
+          # a manual run on a branch only builds (tag dry-run, not pushed)
+          tags: ghcr.io/get-encatch/gatus:${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'dry-run' }}
           labels: |
             org.opencontainers.image.source=https://github.com/get-encatch/gatus
             org.opencontainers.image.description=Gatus with response-header conditions (TwiN/gatus#1825), for Encatch monitoring
