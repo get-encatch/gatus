@@ -1,0 +1,36 @@
+# encatch: builds our image ghcr.io/get-encatch/gatus from a v*-encatch.* tag (see ENCATCH.md).
+# Upstream's publish workflows (Docker Hub, ghcr.io/twin) are disabled in this fork.
+name: encatch-publish
+on:
+  push:
+    tags: ['v*-encatch.*']
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Test
+        run: go test ./...
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          tags: ghcr.io/get-encatch/gatus:${{ github.ref_name }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/get-encatch/gatus
+            org.opencontainers.image.description=Gatus with response-header conditions (TwiN/gatus#1825), for Encatch monitoring
